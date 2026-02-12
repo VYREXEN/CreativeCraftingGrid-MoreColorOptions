@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "stardust.cc.mixin.client",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"CreativeCraftingSlotsMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
