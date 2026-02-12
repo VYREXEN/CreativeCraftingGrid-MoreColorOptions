@@ -3,7 +3,7 @@
 	"package": "stardust.cc.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"CreativeCraftingSlotsMixin"
+		"CreativeCraftingMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

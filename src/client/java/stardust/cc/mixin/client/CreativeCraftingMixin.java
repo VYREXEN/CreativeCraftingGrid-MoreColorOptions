@@ -20,12 +20,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(CreativeInventoryScreen.class)
-public abstract class CreativeCraftingSlotsMixin extends HandledScreen<ScreenHandler> {
+public abstract class CreativeCraftingMixin extends HandledScreen<ScreenHandler> {
     @Unique private static final int OFFSET_X = 35;
     @Unique private static final int OFFSET_Y = -8;
     @Shadow private static ItemGroup selectedTab;
 
-    public CreativeCraftingSlotsMixin(ScreenHandler handler) {
+    public CreativeCraftingMixin(ScreenHandler handler) {
         super(handler, null, null);
     }
 

@@ -3,9 +3,9 @@
 	"id": "creativecrafting",
 	"version": "${version}",
 	"name": "CreativeCrafting",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Add the survival crafting slots to the creative inventory. IYKYK.",
 	"authors": [
-		"Me!"
+		"Stardust"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -13,17 +13,9 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/creativecrafting/icon.png",
-	"environment": "*",
-	"entrypoints": {
-		"client": [
-			"stardust.cc.CreativeCraftingClient"
-		]
-	},
+	"environment": "client",
 	"mixins": [
-		{
-			"config": "creativecrafting.client.mixins.json",
-			"environment": "client"
-		}
+		"creativecrafting.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.18.4",
