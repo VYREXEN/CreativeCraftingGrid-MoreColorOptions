@@ -14,7 +14,7 @@ public abstract class ClientConnectionMixin {
     @Inject(method = "send(Lnet/minecraft/network/packet/Packet;)V", at = @At("HEAD"), cancellable = true)
     private void onSendPacket(Packet<?> packet, CallbackInfo ci) {
         if (packet instanceof CloseHandledScreenC2SPacket p) {
-            if (p.getSyncId() == CreativeCrafting.mc.player.playerScreenHandler.syncId) {
+            if (CreativeCrafting.isSticky() && p.getSyncId() == CreativeCrafting.mc.player.playerScreenHandler.syncId) {
                 CreativeCrafting.logger.info("Creative Crafting: canceled CloseHandledScreenC2SPacket with syncId=" + p.getSyncId());
                 ci.cancel();
             }
