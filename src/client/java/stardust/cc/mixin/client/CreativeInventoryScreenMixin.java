@@ -4,6 +4,7 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.input.KeyInput;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket;
@@ -15,16 +16,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import org.lwjgl.glfw.GLFW;
 
 @Mixin(CreativeInventoryScreen.class)
-public abstract class CreativeCraftingMixin extends HandledScreen<ScreenHandler> {
+public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenHandler> {
     private static final int[] SLOT_X = { 172, 133, 151, 133, 151 };
     private static final int[] SLOT_Y = {  20,  10,  10,  28,  28 };
 
     @Shadow private static ItemGroup selectedTab;
 
-    public CreativeCraftingMixin(ScreenHandler handler) {
+    public CreativeInventoryScreenMixin(ScreenHandler handler) {
         super(handler, null, null);
     }
 
@@ -62,7 +62,7 @@ public abstract class CreativeCraftingMixin extends HandledScreen<ScreenHandler>
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
         if (!selectedTab.getType().equals(ItemGroup.Type.INVENTORY)) return;
-        if (input.getKeycode() != GLFW.GLFW_KEY_DELETE) return;
+        if (input.getKeycode() != InputUtil.GLFW_KEY_DELETE) return;
 
         int slotIdx = handler.slots.indexOf(focusedSlot);
         if (slotIdx < 1 || slotIdx > 4 || focusedSlot.getStack().isEmpty()) return;
