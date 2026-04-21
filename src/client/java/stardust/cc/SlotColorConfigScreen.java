@@ -78,7 +78,8 @@ public class SlotColorConfigScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        this.renderBackground(context, mouseX, mouseY, delta);
+        // super.render already calls renderBackground internally in 1.21.x
+        // Calling it manually before super.render causes "Can only blur once per frame" crash
         super.render(context, mouseX, mouseY, delta);
 
         int cx = this.width / 2;
@@ -88,7 +89,6 @@ public class SlotColorConfigScreen extends Screen {
         int previewY = 85;
         context.drawCenteredTextWithShadow(this.textRenderer, Text.literal("Preview"), cx, previewY, 0xAAAAAA);
 
-        // Get colors based on current in-screen selection (not saved yet)
         SlotColorConfig tmp = new SlotColorConfig();
         tmp.preset = selectedPreset;
         tmp.customBrightness = customBrightness;
@@ -97,7 +97,6 @@ public class SlotColorConfigScreen extends Screen {
         int hilight = colors[1];
         int fill    = colors[2];
 
-        // Draw 5 fake slot previews side by side
         int slotSize = 18;
         int gap = 4;
         int totalW = 5 * slotSize + 4 * gap;
@@ -107,15 +106,13 @@ public class SlotColorConfigScreen extends Screen {
         for (int i = 0; i < 5; i++) {
             int sx = startX + i * (slotSize + gap);
             int sy = startY;
-            // bevel borders
-            context.fill(sx,           sy,           sx + slotSize, sy + 1,         shadow);  // top
-            context.fill(sx,           sy + 1,       sx + 1,        sy + slotSize - 1, shadow);  // left
-            context.fill(sx + slotSize - 1, sy + 1,  sx + slotSize, sy + slotSize - 1, hilight); // right
-            context.fill(sx,           sy + slotSize - 1, sx + slotSize, sy + slotSize, hilight); // bottom
-            context.fill(sx + 1,       sy + 1,       sx + slotSize - 1, sy + slotSize - 1, fill); // interior
+            context.fill(sx,                sy,                sx + slotSize,     sy + 1,             shadow);  // top
+            context.fill(sx,                sy + 1,            sx + 1,            sy + slotSize - 1,  shadow);  // left
+            context.fill(sx + slotSize - 1, sy + 1,            sx + slotSize,     sy + slotSize - 1,  hilight); // right
+            context.fill(sx,                sy + slotSize - 1, sx + slotSize,     sy + slotSize,      hilight); // bottom
+            context.fill(sx + 1,            sy + 1,            sx + slotSize - 1, sy + slotSize - 1,  fill);    // interior
         }
 
-        // Label under preview for custom
         if (selectedPreset == SlotColorConfig.Preset.CUSTOM) {
             context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal("Brightness: " + Math.round(customBrightness * 100) + "%"),
