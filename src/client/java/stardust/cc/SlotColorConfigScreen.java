@@ -77,9 +77,15 @@ public class SlotColorConfigScreen extends Screen {
     }
 
     @Override
+    public void renderBackground(DrawContext context, int mouseX, int mouseY, float delta) {
+        // Use renderDarkening instead of the default blurred background to prevent
+        // "Can only blur once per frame" crash when this screen is opened on top of
+        // another screen that has already applied the blur this frame.
+        this.renderDarkening(context);
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // super.render already calls renderBackground internally in 1.21.x
-        // Calling it manually before super.render causes "Can only blur once per frame" crash
         super.render(context, mouseX, mouseY, delta);
 
         int cx = this.width / 2;
