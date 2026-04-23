@@ -5,7 +5,6 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.input.KeyInput;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -14,6 +13,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.sound.SoundEvents;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -80,17 +80,15 @@ public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenH
         }
 
         if (key == InputUtil.GLFW_KEY_SPACE) {
-            KeyBinding jump = client.options.getJumpKey();
-            KeyBinding sneak = client.options.getSneakKey();
-            boolean shift = sneak.isPressed();
-            if (jump.matchesKey(key, input.getScanCode())) {
-                if (shift) {
-                    craftAll();
-                } else {
-                    craftOnce();
-                }
-                cir.setReturnValue(true);
+            // Read raw GLFW shift state — reliable even when vanilla eats the modifier
+            boolean shift = GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT)  == GLFW.GLFW_PRESS
+                         || GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS;
+            if (shift) {
+                craftAll();
+            } else {
+                craftOnce();
             }
+            cir.setReturnValue(true);
         }
     }
 
