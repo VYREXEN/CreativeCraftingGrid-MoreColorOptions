@@ -12,6 +12,9 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,7 +34,7 @@ public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenH
         super(handler, null, null);
     }
 
-    // ── Slot positioning ─────────────────────────────────────────────────────
+    // ── Slot positioning ──────────────────────────────────────────────────────
 
     @Inject(method = "setSelectedTab", at = @At("TAIL"))
     private void onSetSelectedTab(ItemGroup tab, CallbackInfo ci) {
@@ -66,7 +69,10 @@ public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenH
         }
     }
 
-    // ── Key handling: DELETE to clear slot, SPACE to craft once ──────────────
+    // ── Key handling ──────────────────────────────────────────────────────────
+    // SPACE        = craft once
+    // SHIFT+SPACE  = craft all (mass craft, like shift-click on crafting table)
+    // DELETE       = clear focused ingredient slot
 
     @Inject(method = "keyPressed", at = @At("HEAD"), cancellable = true)
     private void onKeyPressed(KeyInput input, CallbackInfoReturnable<Boolean> cir) {
@@ -74,7 +80,6 @@ public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenH
 
         int key = input.getKeycode();
 
-        // DELETE — clear focused ingredient slot
         if (key == InputUtil.GLFW_KEY_DELETE) {
             int slotIdx = handler.slots.indexOf(focusedSlot);
             if (slotIdx < 1 || slotIdx > 4 || focusedSlot.getStack().isEmpty()) return;
@@ -84,65 +89,62 @@ public abstract class CreativeInventoryScreenMixin extends HandledScreen<ScreenH
             return;
         }
 
-        // SPACE — craft one result into inventory (like clicking the output slot)
         if (key == InputUtil.GLFW_KEY_SPACE) {
-            craftOnce(false);
+            boolean shift = (GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT) == GLFW.GLFW_PRESS)
+                         || (GLFW.glfwGetKey(client.getWindow().getHandle(), GLFW.GLFW_KEY_RIGHT_SHIFT) == GLFW.GLFW_PRESS);
+            if (shift) {
+                craftAll();
+            } else {
+                craftOnce();
+            }
             cir.setReturnValue(true);
         }
     }
 
-    // ── Mouse handling: left-click output = craft once, shift-click = craft all ──
+    // ── Mouse handling ────────────────────────────────────────────────────────
+    // Left-click output  = craft once
+    // Shift-click output = craft all
 
     @Inject(method = "onMouseClick(Lnet/minecraft/screen/slot/Slot;IILnet/minecraft/screen/slot/SlotActionType;)V",
             at = @At("HEAD"), cancellable = true)
     private void onMouseClick(Slot slot, int slotId, int button, SlotActionType actionType, CallbackInfo ci) {
         if (!selectedTab.getType().equals(ItemGroup.Type.INVENTORY)) return;
-        // Slot 0 is the output/result slot
         if (slot == null || handler.slots.indexOf(slot) != 0) return;
 
         if (actionType == SlotActionType.QUICK_MOVE) {
-            // Shift-click: craft as many times as possible
             craftAll();
             ci.cancel();
         } else if (actionType == SlotActionType.PICKUP) {
-            // Normal click: craft once
-            craftOnce(false);
+            craftOnce();
             ci.cancel();
         }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    /**
-     * Craft one result: take the output stack into the player's inventory.
-     * Uses QUICK_CRAFT action on slot 0 so the server handles ingredient consumption.
-     */
-    private void craftOnce(boolean silent) {
+    private void craftOnce() {
         Slot output = handler.slots.get(0);
         if (output.getStack().isEmpty()) return;
         client.interactionManager.clickSlot(
-                handler.syncId,
-                0,          // slot index = output
-                0,          // button = left
-                SlotActionType.QUICK_MOVE,
-                client.player
-        );
+                handler.syncId, 0, 0, SlotActionType.QUICK_MOVE, client.player);
+        playCraftSound();
     }
 
-    /**
-     * Spam craft until the output is empty (ingredients run out).
-     */
     private void craftAll() {
+        boolean crafted = false;
         for (int i = 0; i < 64; i++) {
-            Slot output = handler.slots.get(0);
-            if (output.getStack().isEmpty()) break;
+            if (handler.slots.get(0).getStack().isEmpty()) break;
             client.interactionManager.clickSlot(
-                    handler.syncId,
-                    0,
-                    0,
-                    SlotActionType.QUICK_MOVE,
-                    client.player
-            );
+                    handler.syncId, 0, 0, SlotActionType.QUICK_MOVE, client.player);
+            crafted = true;
         }
+        if (crafted) playCraftSound();
+    }
+
+    private void playCraftSound() {
+        client.player.playSound(
+                SoundEvents.UI_CARTOGRAPHY_TABLE_TAKE_RESULT,
+                SoundCategory.BLOCKS,
+                1.0f, 1.0f);
     }
 }
